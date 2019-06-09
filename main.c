@@ -19,46 +19,27 @@
  * Main point for shell "wish"
  *
  *****************************************************************************/
-#ifndef _MAIN_
-#define _MAIN_
 
 #define _GNU_SOURCE
 
+#include "defs.h"
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
-
-/************************ Defines and typedefs *******************************/
-#define MAX_STRING_LEN  (256)
-#define SHELL_STARTUP   "\nwinsh> "
-
-typedef struct{
-    size_t length;
-    char* line;
-} T_Line;
-
-typedef enum {
-    NEWLINE,
-    EXIT //This is the last command
-} T_SHELL_COMMANDS;
-
-typedef struct {
-    T_SHELL_COMMANDS command;
-    char commandName[MAX_STRING_LEN];
-} T_SHELL_TABLE;
-
-/************************** Global Data Definitions **************************/
+#include <string.h>
 
 
 /************************** Static Data Definitions **************************/
 
 static T_SHELL_TABLE shell_table[] = 
 {
-  {NEWLINE, "\x0D"},  
-  {EXIT,  "exit"}
+  {NOACT,   ""},
+  {NEWLINE, "\n"},  
+  {EXIT,    "exit\0x"}
 };
 
-static
+static size_t tableSize = sizeof(shell_table)/sizeof(shell_table[0]);
+
 /************************* Static Function Prototypes ************************/
 //TBD create init - to clean terminal
 
@@ -74,23 +55,39 @@ static
 *
 * @return 0 if main has ended successfully
 *****************************************************************************/
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]){
 
     ssize_t result = 0;
     T_Line  inputLine = {0, NULL};
+    T_SHELL_COMMANDS currentCommand = NOACT;
 
     if((0 < argc) && (NULL != argv)) {
 
+        printf("table size %d", tableSize);
         printf(SHELL_STARTUP);
         
-        while(1) {
+        while(EXIT != currentCommand) {
             //TBD stdin or fd of file
             result = getline(&inputLine.line, &inputLine.length, stdin);
             if(EINVAL != result) {
 
-                //Find the command in the table
+                printf("Entered command: %s\n", inputLine.line );
 
-                //Run the command
+                for(int i = 0; i < tableSize; i++) {
+                    if(0 == strncmp(inputLine.line, shell_table[i].commandName, inputLine.length)){
+                        currentCommand = shell_table[i].command;
+                        printf("Current command %d", currentCommand);
+                    }
+                }//for
+
+                printf(SHELL_STARTUP);
+
+                switch(currentCommand) {
+                    case NEWLINE: {
+                        
+                        break;
+                    }
+                }//switch                
 
             }//if
 
@@ -99,5 +96,3 @@ int main(int argc, char **argv) {
     }//if
 
 }//main
-
-#endif

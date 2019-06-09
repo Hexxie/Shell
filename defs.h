@@ -26,7 +26,7 @@
 
 /************************ Defines and typedefs *******************************/
 #define MAX_STRING_LEN  (256)
-#define SHELL_STARTUP   "\nwish> "
+#define SHELL_STARTUP   "wish> "
 
 typedef struct{
     size_t length;
@@ -34,6 +34,7 @@ typedef struct{
 } T_Line;
 
 typedef enum {
+    NOACT,
     NEWLINE,
     EXIT //This is the last command
 } T_SHELL_COMMANDS;
@@ -42,6 +43,7 @@ typedef struct {
     T_SHELL_COMMANDS command;
     char commandName[MAX_STRING_LEN];
 } T_SHELL_TABLE;
+
 
 /************************** Function Definitions **************************/
 
