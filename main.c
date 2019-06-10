@@ -60,6 +60,7 @@ int main(int argc, char *argv[]){
     ssize_t result = 0;
     T_Line  inputLine = {0, NULL};
     T_SHELL_COMMANDS currentCommand = NOACT;
+    char* originalInput = NULL;
 
     if((0 < argc) && (NULL != argv)) {
 
@@ -68,15 +69,25 @@ int main(int argc, char *argv[]){
         while(EXIT != currentCommand) {
             //TBD stdin or fd of file
             result = getline(&inputLine.line, &inputLine.length, stdin);
+
             if(EINVAL != result) {
 
-                printf("Entered command: %s\n", inputLine.line );
-
+                //Check that the command is built-in
                 for(int i = 0; i < tableSize; i++) {
                     if(0 == strncmp(inputLine.line, shell_table[i].commandName, strlen(shell_table[i].commandName))){
                         currentCommand = shell_table[i].command;
-                    }
+                    }//if
                 }//for
+
+                //If the command not found in the table - this mean that it's not a built-in command
+                //Parse the command
+                while(NULL != strsep(&inputLine.line, " ")) {
+                    printf("%s\n", inputLine.line);
+                }//while
+
+                //Go through the PATH and check that the command exists via https://www.opennet.ru/man.shtml?topic=access&category=2&russian=0
+
+                //Fork a new process and start the command
 
                 printf(SHELL_STARTUP);
 
