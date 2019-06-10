@@ -35,7 +35,7 @@ static T_SHELL_TABLE shell_table[] =
 {
   {NOACT,   ""},
   {NEWLINE, "\n"},  
-  {EXIT,    "exit\0x"}
+  {EXIT,    "exit"},
 };
 
 static size_t tableSize = sizeof(shell_table)/sizeof(shell_table[0]);
@@ -63,7 +63,6 @@ int main(int argc, char *argv[]){
 
     if((0 < argc) && (NULL != argv)) {
 
-        printf("table size %d", tableSize);
         printf(SHELL_STARTUP);
         
         while(EXIT != currentCommand) {
@@ -74,17 +73,16 @@ int main(int argc, char *argv[]){
                 printf("Entered command: %s\n", inputLine.line );
 
                 for(int i = 0; i < tableSize; i++) {
-                    if(0 == strncmp(inputLine.line, shell_table[i].commandName, inputLine.length)){
+                    if(0 == strncmp(inputLine.line, shell_table[i].commandName, strlen(shell_table[i].commandName))){
                         currentCommand = shell_table[i].command;
-                        printf("Current command %d", currentCommand);
                     }
                 }//for
 
                 printf(SHELL_STARTUP);
 
                 switch(currentCommand) {
-                    case NEWLINE: {
-                        
+                    case EXIT: {
+                        exit(0);
                         break;
                     }
                 }//switch                
