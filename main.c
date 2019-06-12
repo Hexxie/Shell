@@ -69,6 +69,7 @@ int main(int argc, char *argv[]){
     char* path = NULL;
     int access_res = 0;
     bool isExec = false;
+    char* fullPathToCmd = NULL;
 
     if((0 < argc) && (NULL != argv)) {
 
@@ -101,35 +102,43 @@ int main(int argc, char *argv[]){
                     
 
                     env_path = (char*) malloc(strlen(env_p));
-                    if(NULL != env_path) {
+                    if(path != env_path) {
                         memcpy(env_path, env_p, strlen(env_p));
-                        printf("PATH: %s\n", env_path);
                         
+                        //get the first entity
                         path = strsep(&env_path, ":");
-                        while(path != env_path) {
-                            path = (char*) realloc(path, strlen(path) + strlen(externalCommand)+1);
-                            strcat(path, "/");
-                            strcat(path, externalCommand);
-                            printf("Checking %s\n", path);
-                            access_res = access(path, X_OK);
-                            if(-1 != access_res) {
-                                isExec = true;
-                                break;
-                            } else {
-                                printf("access returns an error %d\n", access_res);                                
+                        while(NULL != env_path) {
+                            fullPathToCmd = (char*) malloc(strlen(path) + strlen(externalCommand)+2);
+
+                            if(NULL != fullPathToCmd){
+                                strcat(fullPathToCmd, path);
+                                strcat(fullPathToCmd, "/");
+                                strcat(fullPathToCmd, externalCommand);
+                                access_res = access(fullPathToCmd, X_OK);
+                                if(-1 != access_res) {
+                                    isExec = true;
+                                    break;
+                                } else { 
+                                    printf("Invalid path %s with error %d\n",fullPathToCmd, access_res);
+                                    if(NULL != fullPathToCmd) {
+                                        free(fullPathToCmd);  
+                                        fullPathToCmd = NULL;
+                                    }
+                                                             
+                                }
                             }
-                            free(path);
                             path = strsep(&env_path, ":");
                         }//while
                     }//if
 
-                    //Fork a new process and start the command
+                    if(NULL != fullPathToCmd) {
+                        printf("Found the path %s\n", fullPathToCmd);
+                    } else {
+                        printf("Command not found!\n");
+                    }
+                    
 
-
-                    //Freeing all used memory
-                    if(NULL != externalCommand) {
-                        free(externalCommand);
-                    }//if                    
+                    //Fork a new process and start the command                  
 
                 } else {
                     switch(currentCommand) {
