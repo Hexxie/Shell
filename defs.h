@@ -39,6 +39,11 @@ typedef enum {
     EXIT //This is the last command
 } T_SHELL_COMMANDS;
 
+typedef enum {
+    SHELL_SUCCESS,
+    SHELL_ERROR
+}T_RESULT;
+
 typedef struct {
     T_SHELL_COMMANDS command;
     char commandName[MAX_STRING_LEN];

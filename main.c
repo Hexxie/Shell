@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 
 /************************** Static Data Definitions **************************/
@@ -44,6 +45,7 @@ static size_t tableSize = sizeof(shell_table)/sizeof(shell_table[0]);
 
 /************************* Static Function Prototypes ************************/
 //TBD create init - to clean terminal
+T_RESULT findCommand(T_SHELL_COMMANDS *command, char* line);
 
 /********************************** Functions ********************************/
 
@@ -62,6 +64,7 @@ int main(int argc, char *argv[]){
     ssize_t result = 0;
     T_Line  inputLine = {0, NULL};
     T_SHELL_COMMANDS currentCommand = NOACT;
+    T_RESULT shell_result = SHELL_ERROR;
     char* externalCommand = NULL;
     char** params = NULL;
     char* env_p = NULL;
@@ -70,6 +73,7 @@ int main(int argc, char *argv[]){
     int access_res = 0;
     bool isExec = false;
     char* fullPathToCmd = NULL;
+    int rc_wait;
 
     if((0 < argc) && (NULL != argv)) {
 
@@ -79,14 +83,13 @@ int main(int argc, char *argv[]){
             //TBD stdin or fd of file
             result = getline(&inputLine.line, &inputLine.length, stdin);
 
+            //remove the last input symbol - Enter
+            inputLine.line[strlen(inputLine.line)-1] = '\0';
+
             if(EINVAL != result) {
 
                 //Check that the command is built-in
-                for(int i = 0; i < tableSize; i++) {
-                    if(0 == strncmp(inputLine.line, shell_table[i].commandName, strlen(shell_table[i].commandName))){
-                        currentCommand = shell_table[i].command;
-                    }//if
-                }//for
+                shell_result = findCommand(&currentCommand, inputLine.line);
 
                 //If the command not found in the table - this mean that it's not a built-in command
 
@@ -95,18 +98,18 @@ int main(int argc, char *argv[]){
                     externalCommand = strsep(&inputLine.line, " ");
                     
                     printf("External command: %s\n", externalCommand);                
-                    printf("Params: %s", inputLine.line);
+                    printf("Params: %s\n", inputLine.line);
 
                     //Go through the PATH and check that the command exists via https://www.opennet.ru/man.shtml?topic=access&category=2&russian=0
-                    env_p = getenv("PATH");
-                    
+                    env_p = getenv("PATH");                    
 
                     env_path = (char*) malloc(strlen(env_p));
                     if(path != env_path) {
                         memcpy(env_path, env_p, strlen(env_p));
                         
                         //get the first entity
-                        path = strsep(&env_path, ":");
+                        path = strsep(&env_path, ":");                        
+
                         while(NULL != env_path) {
                             fullPathToCmd = (char*) malloc(strlen(path) + strlen(externalCommand)+2);
 
@@ -119,7 +122,6 @@ int main(int argc, char *argv[]){
                                     isExec = true;
                                     break;
                                 } else { 
-                                    printf("Invalid path %s with error %d\n",fullPathToCmd, access_res);
                                     if(NULL != fullPathToCmd) {
                                         free(fullPathToCmd);  
                                         fullPathToCmd = NULL;
@@ -132,11 +134,13 @@ int main(int argc, char *argv[]){
                     }//if
 
                     if(NULL != fullPathToCmd) {
-                        printf("Found the path %s\n", fullPathToCmd);
+                        printf("Found the path %s\n", fullPathToCmd);       
+                        execv(fullPathToCmd, inputLine.line);
+                        rc_wait = wait(NULL);
+
                     } else {
                         printf("Command not found!\n");
                     }
-                    
 
                     //Fork a new process and start the command                  
 
@@ -163,3 +167,35 @@ int main(int argc, char *argv[]){
     }//if
 
 }//main
+
+
+/******************************************************************************
+* findCommand
+**************************************************************************//**
+* Search in the command table for built-in command
+*
+* @param[out]   command   nr of arguments
+* @param[in]    line   array with arguments   
+*
+* @return 0 if main has ended successfully
+*****************************************************************************/
+T_RESULT findCommand(T_SHELL_COMMANDS *command, char* line) {
+    T_RESULT result = SHELL_ERROR;
+
+    if(NULL == command) {
+        printf("%s: command pointer is not valid", __func__);
+    } else if (NULL == line) {
+        printf("%s: line pointer is not valid", __func__);
+    } else {
+
+        for(int i = 0; i < tableSize; i++) {
+            if(0 == strncmp(line, shell_table[i].commandName, strlen(shell_table[i].commandName))){
+                *command = shell_table[i].command;
+                result = SHELL_SUCCESS;
+            }//if
+        }//for
+
+    }//if  
+
+    return result;
+}//getCommand
