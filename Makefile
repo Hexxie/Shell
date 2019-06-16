@@ -1,9 +1,9 @@
-objects = main.o
+objects = ./src/main.o
 
 wish : $(objects)
 	cc -o wish $(objects)
 
-main.o : defs.h
+main.o : ./src/defs.h
 
 clean : 
 		rm wish $(objects)

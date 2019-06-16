@@ -80,10 +80,11 @@ int main(int argc, char *argv[]){
         printf(SHELL_STARTUP);
         
         while(EXIT != currentCommand) {
+            
             //TBD stdin or fd of file
             result = getline(&inputLine.line, &inputLine.length, stdin);
 
-            //remove the last input symbol - Enter
+            //remove the last input symbol - Enter (for user input)
             inputLine.line[strlen(inputLine.line)-1] = '\0';
 
             if(EINVAL != result) {
@@ -134,15 +135,15 @@ int main(int argc, char *argv[]){
                     }//if
 
                     if(NULL != fullPathToCmd) {
-                        printf("Found the path %s\n", fullPathToCmd);       
+                        printf("Found the path %s\n", fullPathToCmd);
+
+                        //Fork the process       
                         execv(fullPathToCmd, inputLine.line);
                         rc_wait = wait(NULL);
 
                     } else {
                         printf("Command not found!\n");
-                    }
-
-                    //Fork a new process and start the command                  
+                    }                
 
                 } else {
                     switch(currentCommand) {
