@@ -22,7 +22,6 @@
 #include "test_shell.h"
 
 
-
 TEST example_test_case(void) {
     int r = 0;
     ASSERT(1 == 1);

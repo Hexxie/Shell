@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include "defs.h"
-int userInput(char** line, size_t* length);
+
+int user_input(char** line, size_t* length);
 
 #endif

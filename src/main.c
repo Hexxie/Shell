@@ -23,7 +23,9 @@
 #define _GNU_SOURCE
 
 #include "defs.h"
+#include "utils.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -82,26 +84,44 @@ int main(int argc, char *argv[]){
         while(EXIT != currentCommand) {
             
             //TBD stdin or fd of file
-            result = getline(&inputLine.line, &inputLine.length, stdin);
-
-            //remove the last input symbol - Enter (for user input)
-            inputLine.line[strlen(inputLine.line)-1] = '\0';
+            if(argc > 1) {
+                //parse file
+                 printf("-1");
+            } else {
+                result = getline(&inputLine.line, &inputLine.length, stdin);
+                printf("0");
+                //remove the last input symbol - Enter (for user input)
+                inputLine.line[strlen(inputLine.line)-1] = '\0';
+            }
 
             if(EINVAL != result) {
+                printf("1");
 
                 //Check that the command is built-in
                 shell_result = findCommand(&currentCommand, inputLine.line);
+                printf("2");
 
                 //If the command not found in the table - this mean that it's not a built-in command
-
                 if(NOACT == currentCommand) {
+
                     //Parse the command
                     externalCommand = strsep(&inputLine.line, " ");
                     
-                    printf("External command: %s\n", externalCommand);                
-                    printf("Params: %s\n", inputLine.line);
 
-                    //Go through the PATH and check that the command exists via https://www.opennet.ru/man.shtml?topic=access&category=2&russian=0
+                    //Parse parameters
+                    if(NULL != inputLine.line) {
+                        do {
+                            printf("there");
+                            *params = strsep(&inputLine.line, " ");
+                            printf("here");
+                        } while(*params != NULL && params++);
+                    }
+
+                    while(NULL != *params) {
+                        printf("%s ", *params++);
+                    }
+
+                    //Go through the PATH and check that the command exists
                     env_p = getenv("PATH");                    
 
                     env_path = (char*) malloc(strlen(env_p));
@@ -109,7 +129,7 @@ int main(int argc, char *argv[]){
                         memcpy(env_path, env_p, strlen(env_p));
                         
                         //get the first entity
-                        path = strsep(&env_path, ":");                        
+                        path = strsep(&env_path, ":");                       
 
                         while(NULL != env_path) {
                             fullPathToCmd = (char*) malloc(strlen(path) + strlen(externalCommand)+2);
@@ -135,11 +155,16 @@ int main(int argc, char *argv[]){
                     }//if
 
                     if(NULL != fullPathToCmd) {
-                        printf("Found the path %s\n", fullPathToCmd);
-
-                        //Fork the process       
-                        execv(fullPathToCmd, inputLine.line);
-                        rc_wait = wait(NULL);
+                        //Fork the process
+                        result = fork();
+                        if(result == 0) {
+                            result = execl(fullPathToCmd, "-la", NULL);
+                            if(-1 == result) {
+                                perror("Error");
+                            }                           
+                        }
+                        rc_wait = wait(NULL);       
+                        
 
                     } else {
                         printf("Command not found!\n");
@@ -150,6 +175,8 @@ int main(int argc, char *argv[]){
                     case EXIT: {
                         exit(0);
                         break;
+                    } default: {
+                        printf("Command not found!\n");
                     }
                 }//switch  
                 }//if

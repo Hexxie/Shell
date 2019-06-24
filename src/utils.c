@@ -20,6 +20,7 @@
  *
  *****************************************************************************/
 #include <stdio.h>
+#include  <string.h>
 
 #include "utils.h"
 
@@ -33,7 +34,7 @@
 *
 * @return 0 if input is valid symbols
 *****************************************************************************/
-int userInput(char** line, size_t* length) {
+int user_input(char** line, size_t* length) {
     int result = 0;
     result = getline(line, length, stdin);
 
