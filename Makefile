@@ -1,18 +1,16 @@
 PROJECT = wish
-BUILD   = build 
+BUILD   = build
 SRC     = src
-T_TEST    = tests 
+T_TEST    = tests
 CFLAGS  = -c -Wall -I./include
 
 OBJS = $(SRC)/main.o \
-		$(SRC)/shell.o \
-		$(SRC)/utils.o	
 
 TEST_OBJS = ./tests/test_shell.o \
 			./tests/test_util.o \
-			
 
-all: wish test 
+
+all: wish test
 
 wish : $(OBJS)
 	cc -o wish $(OBJS)
@@ -27,6 +25,6 @@ utils.o: $(SRC)/utils.h
 
 test_shell.o: ./tests/test_shell.h
 
-clean : 
+clean :
 	rm wish $(OBJS)
 	rm ./tests/test_wish $(TEST_OBJS)
